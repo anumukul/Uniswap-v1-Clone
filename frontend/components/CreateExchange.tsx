@@ -13,7 +13,7 @@ export default function CreateExchange() {
   const [error, setError] = useState<string | null>(null)
 
   const { data: existingExchange } = useReadContract({
-    address: FACTORY_ADDRESS,
+    address: FACTORY_ADDRESS as `0x${string}`,
     abi: FACTORY_ABI,
     functionName: 'getExchange',
     args: tokenAddress ? [tokenAddress as `0x${string}`] : undefined,
@@ -101,7 +101,7 @@ export default function CreateExchange() {
     
     try {
       writeContract({
-        address: FACTORY_ADDRESS,
+        address: FACTORY_ADDRESS as `0x${string}`,
         abi: FACTORY_ABI,
         functionName: 'createExchange',
         args: [normalizedAddress as `0x${string}`],

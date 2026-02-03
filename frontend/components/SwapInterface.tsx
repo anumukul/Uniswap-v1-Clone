@@ -24,7 +24,7 @@ export default function SwapInterface() {
   const isTokenToToken = inputToken !== 'ETH' && outputToken !== '' && outputToken !== 'ETH'
 
   const { data: inputExchangeAddr } = useReadContract({
-    address: FACTORY_ADDRESS,
+    address: FACTORY_ADDRESS as `0x${string}`,
     abi: FACTORY_ABI,
     functionName: 'getExchange',
     args: inputToken !== 'ETH' && inputToken ? [inputToken as `0x${string}`] : undefined,
@@ -32,7 +32,7 @@ export default function SwapInterface() {
   })
 
   const { data: outputExchangeAddr } = useReadContract({
-    address: FACTORY_ADDRESS,
+    address: FACTORY_ADDRESS as `0x${string}`,
     abi: FACTORY_ABI,
     functionName: 'getExchange',
     args: outputToken !== 'ETH' && outputToken ? [outputToken as `0x${string}`] : undefined,

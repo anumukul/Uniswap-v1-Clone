@@ -21,7 +21,7 @@ export default function LiquidityInterface() {
   const [tokenDecimals, setTokenDecimals] = useState(18)
 
   const { data: exchangeAddr } = useReadContract({
-    address: FACTORY_ADDRESS,
+    address: FACTORY_ADDRESS as `0x${string}`,
     abi: FACTORY_ABI,
     functionName: 'getExchange',
     args: tokenAddress ? [tokenAddress as `0x${string}`] : undefined,

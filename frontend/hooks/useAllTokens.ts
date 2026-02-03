@@ -12,7 +12,7 @@ export interface TokenInfo {
 
 export function useAllTokens() {
   const { data: tokenCount, isLoading: isLoadingCount } = useReadContract({
-    address: FACTORY_ADDRESS,
+    address: FACTORY_ADDRESS as `0x${string}`,
     abi: FACTORY_ABI,
     functionName: 'tokenCount',
   })
@@ -26,7 +26,7 @@ export function useAllTokens() {
   const tokenAddressContracts = useMemo(() => {
     if (tokenIds.length === 0) return []
     return tokenIds.map((id) => ({
-      address: FACTORY_ADDRESS,
+      address: FACTORY_ADDRESS as `0x${string}`,
       abi: FACTORY_ABI,
       functionName: 'getTokenWithId' as const,
       args: [BigInt(id)],
