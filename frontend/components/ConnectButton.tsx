@@ -4,15 +4,11 @@ import { useState, useEffect, useRef } from 'react'
 import { useAccount, useConnect, useDisconnect, useSwitchChain } from 'wagmi'
 import { sepolia } from 'wagmi/chains'
 
-declare global {
-  interface Window {
-    ethereum?: {
-      isMetaMask?: boolean
-      request?: (args: { method: string; params?: any[] }) => Promise<any>
-      on?: (event: string, handler: (chainId: string) => void) => void
-      removeListener?: (event: string, handler: (chainId: string) => void) => void
-    }
-  }
+interface EthereumProvider {
+  isMetaMask?: boolean
+  request?: (args: { method: string; params?: any[] }) => Promise<any>
+  on?: (event: string, handler: (chainId: string) => void) => void
+  removeListener?: (event: string, handler: (chainId: string) => void) => void
 }
 
 export default function ConnectButton() {
@@ -29,11 +25,13 @@ export default function ConnectButton() {
   const isWrongNetwork = currentChainId && currentChainId !== sepolia.id
 
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.ethereum) return
+    if (typeof window === 'undefined' || !(window as any).ethereum) return
+
+    const ethereum = (window as any).ethereum as EthereumProvider
 
     const updateChainId = async () => {
       try {
-        const chainIdHex = await window.ethereum!.request({ method: 'eth_chainId' })
+        const chainIdHex = await ethereum.request!({ method: 'eth_chainId' })
         const chainId = parseInt(chainIdHex as string, 16)
         setDetectedChainId(chainId)
       } catch (error) {
@@ -48,13 +46,13 @@ export default function ConnectButton() {
       setDetectedChainId(chainId)
     }
 
-    if (window.ethereum.on) {
-      window.ethereum.on('chainChanged', handleChainChanged)
+    if (ethereum.on) {
+      ethereum.on('chainChanged', handleChainChanged)
     }
 
     return () => {
-      if (window.ethereum && window.ethereum.removeListener) {
-        window.ethereum.removeListener('chainChanged', handleChainChanged)
+      if (ethereum && ethereum.removeListener) {
+        ethereum.removeListener('chainChanged', handleChainChanged)
       }
     }
   }, [])
@@ -161,7 +159,7 @@ export default function ConnectButton() {
                 ) : (
                   availableConnectors.map((connector) => {
                     const connectorName = connector.name === 'Injected' 
-                      ? (typeof window !== 'undefined' && window.ethereum?.isMetaMask ? 'MetaMask' : 'Browser Wallet')
+                      ? (typeof window !== 'undefined' && (window as any).ethereum?.isMetaMask ? 'MetaMask' : 'Browser Wallet')
                       : connector.name
                     
                     return (
@@ -180,7 +178,7 @@ export default function ConnectButton() {
                       >
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-[#21262d] rounded-lg flex items-center justify-center flex-shrink-0">
-                            {(connectorName === 'MetaMask' || (typeof window !== 'undefined' && window.ethereum?.isMetaMask && connector.name === 'Injected')) && (
+                            {(connectorName === 'MetaMask' || (typeof window !== 'undefined' && (window as any).ethereum?.isMetaMask && connector.name === 'Injected')) && (
                               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#E2761B"/>
                                 <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#E4761B"/>

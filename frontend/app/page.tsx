@@ -22,11 +22,17 @@ export default function Home() {
   const isWrongNetwork = isConnected && currentChainId !== undefined && currentChainId !== null && currentChainId !== sepolia.id
   
   useEffect(() => {
-    if (typeof window === 'undefined' || !window.ethereum) return
+    if (typeof window === 'undefined' || !(window as any).ethereum) return
+
+    const ethereum = (window as any).ethereum as {
+      request?: (args: { method: string; params?: any[] }) => Promise<any>
+      on?: (event: string, handler: (chainId: string) => void) => void
+      removeListener?: (event: string, handler: (chainId: string) => void) => void
+    }
 
     const updateChainId = async () => {
       try {
-        const chainIdHex = await window.ethereum!.request({ method: 'eth_chainId' })
+        const chainIdHex = await ethereum.request!({ method: 'eth_chainId' })
         const chainId = parseInt(chainIdHex as string, 16)
         setDetectedChainId(chainId)
       } catch (error) {
@@ -41,13 +47,13 @@ export default function Home() {
       setDetectedChainId(chainId)
     }
 
-    if (window.ethereum.on) {
-      window.ethereum.on('chainChanged', handleChainChanged)
+    if (ethereum.on) {
+      ethereum.on('chainChanged', handleChainChanged)
     }
 
     return () => {
-      if (window.ethereum && window.ethereum.removeListener) {
-        window.ethereum.removeListener('chainChanged', handleChainChanged)
+      if (ethereum && ethereum.removeListener) {
+        ethereum.removeListener('chainChanged', handleChainChanged)
       }
     }
   }, [])
