@@ -42,7 +42,7 @@ export function useAllTokens() {
     if (!tokenAddresses) return []
     return tokenAddresses
       .map((result) => (result.status === 'success' ? result.result : null))
-      .filter((addr): addr is string => addr !== null && addr !== '0x0000000000000000000000000000000000000000')
+      .filter((addr): addr is `0x${string}` => addr !== null && addr !== '0x0000000000000000000000000000000000000000')
   }, [tokenAddresses])
 
   const tokenInfoContracts = useMemo(() => {
@@ -88,7 +88,7 @@ export function useAllTokens() {
         decimalsResult?.status === 'success'
       ) {
         result.push({
-          address: addressesToProcess[i],
+          address: addressesToProcess[i] as string,
           symbol: symbolResult.result as string,
           name: nameResult.result as string,
           decimals: Number(decimalsResult.result),
