@@ -7,24 +7,30 @@ import { injected, metaMask, walletConnect, coinbaseWallet } from 'wagmi/connect
 
 const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
 
-const connectors = [
-  metaMask(),
-  injected({ shimDisconnect: true }),
-]
+const buildConnectors = () => {
+  const connectors = [
+    metaMask(),
+    injected({ shimDisconnect: true }),
+  ]
 
-if (projectId) {
-  try {
-    connectors.push(walletConnect({ projectId }))
-  } catch (error) {
-    console.warn('WalletConnect connector failed to initialize:', error)
+  if (projectId) {
+    try {
+      connectors.push(walletConnect({ projectId }) as any)
+    } catch (error) {
+      console.warn('WalletConnect connector failed to initialize:', error)
+    }
   }
+
+  try {
+    connectors.push(coinbaseWallet({ appName: 'Uniswap V1 Clone' }) as any)
+  } catch (error) {
+    console.warn('Coinbase Wallet connector failed to initialize:', error)
+  }
+
+  return connectors
 }
 
-try {
-  connectors.push(coinbaseWallet({ appName: 'Uniswap V1 Clone' }))
-} catch (error) {
-  console.warn('Coinbase Wallet connector failed to initialize:', error)
-}
+const connectors = buildConnectors()
 
 const config = createConfig({
   chains: [sepolia],
