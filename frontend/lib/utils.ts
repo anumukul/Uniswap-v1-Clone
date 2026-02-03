@@ -1,19 +1,21 @@
-import { ethers } from "ethers";
+import { formatEther as viemFormatEther, parseEther as viemParseEther, formatUnits as viemFormatUnits, parseUnits as viemParseUnits } from "viem";
 
-export const formatEther = (value: bigint | string) => {
-  return ethers.formatEther(value);
+export const formatEther = (value: bigint | string): string => {
+  const bigintValue = typeof value === 'string' ? BigInt(value) : value;
+  return viemFormatEther(bigintValue);
 };
 
-export const parseEther = (value: string) => {
-  return ethers.parseEther(value);
+export const parseEther = (value: string): bigint => {
+  return viemParseEther(value);
 };
 
-export const formatUnits = (value: bigint | string, decimals: number = 18) => {
-  return ethers.formatUnits(value, decimals);
+export const formatUnits = (value: bigint | string, decimals: number = 18): string => {
+  const bigintValue = typeof value === 'string' ? BigInt(value) : value;
+  return viemFormatUnits(bigintValue, decimals);
 };
 
-export const parseUnits = (value: string, decimals: number = 18) => {
-  return ethers.parseUnits(value, decimals);
+export const parseUnits = (value: string, decimals: number = 18): bigint => {
+  return viemParseUnits(value, decimals);
 };
 
 export const getDeadline = (minutes: number = 20) => {
