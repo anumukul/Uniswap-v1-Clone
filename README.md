@@ -1,22 +1,22 @@
-# Uniswap V1 Clone (Solidity)
+# Uniswap V1 Clone
 
-A complete clone of Uniswap V1 written in **Solidity**, deployed on Ethereum Sepolia testnet.
+A complete clone of Uniswap V1 written in Solidity, deployed on Ethereum Sepolia testnet.
 
-## 🚀 Features
+## Features
 
-- **Original Uniswap V1 Logic**: Converted from Vyper to Solidity
-- **Swap Tokens**: Swap between ETH and ERC20 tokens
-- **Liquidity Management**: Add and remove liquidity from pools
-- **Create Exchanges**: Deploy new exchanges for any ERC20 token
-- **0.3% Trading Fee**: Same fee structure as original Uniswap V1
+- Original Uniswap V1 Logic: Converted from Vyper to Solidity
+- Swap Tokens: Swap between ETH and ERC20 tokens
+- Liquidity Management: Add and remove liquidity from pools
+- Create Exchanges: Deploy new exchanges for any ERC20 token
+- 0.3% Trading Fee: Same fee structure as original Uniswap V1
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Node.js 18+
 - MetaMask or compatible Web3 wallet
 - Sepolia testnet ETH
 
-## 🛠️ Setup
+## Setup
 
 ### 1. Install Dependencies
 
@@ -45,14 +45,14 @@ npm run compile
 npm run deploy:sepolia
 ```
 
-## 📁 Contract Structure
+## Contract Structure
 
 - `UniswapFactory.sol` - Factory contract for creating exchanges
 - `UniswapExchange.sol` - Exchange contract for swaps and liquidity
 - `IERC20.sol` - ERC20 interface
 - `IUniswapFactory.sol` - Factory interface
 
-## 🎯 Deployment Order
+## Deployment Order
 
 1. Deploy Exchange template
 2. Deploy Factory
@@ -60,7 +60,7 @@ npm run deploy:sepolia
 
 The deployment script handles this automatically.
 
-## 📝 Notes
+## Notes
 
 - Contracts use Solidity 0.8.20
 - Same constant product formula (x * y = k) as original

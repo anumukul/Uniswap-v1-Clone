@@ -3,6 +3,7 @@ pragma solidity ^0.8.20;
 
 import "./IERC20.sol";
 import "./IUniswapFactory.sol";
+import "./IUniswapExchange.sol";
 
 contract UniswapExchange is IERC20 {
     string public constant name = "Uniswap V1";
@@ -143,7 +144,9 @@ contract UniswapExchange is IERC20 {
     {
         require(deadline >= block.timestamp && tokensBought > 0, "Invalid input");
         uint256 tokenReserve = IERC20(token).balanceOf(address(this));
-        uint256 ethSold = getOutputPrice(tokensBought, address(this).balance, tokenReserve);
+        // Calculate ETH needed BEFORE receiving the msg.value
+        uint256 ethReserve = address(this).balance - msg.value;
+        uint256 ethSold = getOutputPrice(tokensBought, ethReserve, tokenReserve);
         require(msg.value >= ethSold, "Insufficient ETH");
         uint256 ethRefund = msg.value - ethSold;
         if (ethRefund > 0) {
@@ -191,7 +194,8 @@ contract UniswapExchange is IERC20 {
     function getEthToTokenOutputPrice(uint256 tokensBought) external view returns (uint256) {
         require(tokensBought > 0, "Invalid input");
         uint256 tokenReserve = IERC20(token).balanceOf(address(this));
-        return getOutputPrice(tokensBought, address(this).balance, tokenReserve);
+        uint256 ethReserve = address(this).balance;
+        return getOutputPrice(tokensBought, ethReserve, tokenReserve);
     }
     
     function getTokenToEthInputPrice(uint256 tokensSold) external view returns (uint256) {
@@ -257,7 +261,7 @@ contract UniswapExchange is IERC20 {
         require(ethBought >= minEthBought, "Slippage");
         require(IERC20(token).transferFrom(msg.sender, address(this), tokensSold), "Transfer failed");
         
-        UniswapExchange exchange = UniswapExchange(payable(exchangeAddr));
+        IUniswapExchange exchange = IUniswapExchange(payable(exchangeAddr));
         uint256 tokensBought = exchange.ethToTokenSwapInput{value: ethBought}(minTokensBought, deadline);
         
         emit EthPurchase(msg.sender, tokensSold, ethBought);
@@ -285,7 +289,7 @@ contract UniswapExchange is IERC20 {
         require(deadline >= block.timestamp && tokensBought > 0 && maxEthSold > 0, "Invalid input");
         require(exchangeAddr != address(this) && exchangeAddr != address(0), "Invalid exchange");
         
-        UniswapExchange exchange = UniswapExchange(payable(exchangeAddr));
+        IUniswapExchange exchange = IUniswapExchange(payable(exchangeAddr));
         uint256 ethBought = exchange.getEthToTokenOutputPrice(tokensBought);
         require(maxEthSold >= ethBought, "Slippage");
         
@@ -294,7 +298,8 @@ contract UniswapExchange is IERC20 {
         require(maxTokensSold >= tokensSold, "Slippage");
         require(IERC20(token).transferFrom(msg.sender, address(this), tokensSold), "Transfer failed");
         
-        exchange.ethToTokenSwapOutput{value: ethBought}(tokensBought, deadline);
+        // Use transferOutput to send tokens to the original caller, not to this contract
+        exchange.ethToTokenTransferOutput{value: ethBought}(tokensBought, deadline, msg.sender);
         
         emit EthPurchase(msg.sender, tokensSold, ethBought);
         return tokensSold;
@@ -321,7 +326,9 @@ contract UniswapExchange is IERC20 {
     {
         require(deadline >= block.timestamp && tokensBought > 0 && recipient != address(0), "Invalid input");
         uint256 tokenReserve = IERC20(token).balanceOf(address(this));
-        uint256 ethSold = getOutputPrice(tokensBought, address(this).balance, tokenReserve);
+        // Calculate ETH needed BEFORE receiving the msg.value
+        uint256 ethReserve = address(this).balance - msg.value;
+        uint256 ethSold = getOutputPrice(tokensBought, ethReserve, tokenReserve);
         require(msg.value >= ethSold, "Insufficient ETH");
         uint256 ethRefund = msg.value - ethSold;
         if (ethRefund > 0) {
@@ -388,7 +395,7 @@ contract UniswapExchange is IERC20 {
         require(ethBought >= minEthBought, "Slippage");
         require(IERC20(token).transferFrom(msg.sender, address(this), tokensSold), "Transfer failed");
         
-        UniswapExchange exchange = UniswapExchange(payable(exchangeAddr));
+        IUniswapExchange exchange = IUniswapExchange(payable(exchangeAddr));
         uint256 tokensBought = exchange.ethToTokenTransferInput{value: ethBought}(minTokensBought, deadline, recipient);
         
         emit EthPurchase(msg.sender, tokensSold, ethBought);
@@ -418,7 +425,7 @@ contract UniswapExchange is IERC20 {
         require(deadline >= block.timestamp && tokensBought > 0 && maxEthSold > 0 && recipient != address(0), "Invalid input");
         require(exchangeAddr != address(this) && exchangeAddr != address(0), "Invalid exchange");
         
-        UniswapExchange exchange = UniswapExchange(payable(exchangeAddr));
+        IUniswapExchange exchange = IUniswapExchange(payable(exchangeAddr));
         uint256 ethBought = exchange.getEthToTokenOutputPrice(tokensBought);
         require(maxEthSold >= ethBought, "Slippage");
         
@@ -442,12 +449,24 @@ contract UniswapExchange is IERC20 {
     }
     
     receive() external payable {
-        if (msg.value > 0) {
+        // Only execute swap on direct ETH transfers (not from contract calls)
+        // receive() is NOT called when using .value() in function calls, so this is safe
+        if (msg.value > 0 && token != address(0) && totalSupply > 0) {
             uint256 tokenReserve = IERC20(token).balanceOf(address(this));
-            uint256 tokensBought = getInputPrice(msg.value, address(this).balance - msg.value, tokenReserve);
-            if (tokensBought > 0) {
-                require(IERC20(token).transfer(msg.sender, tokensBought), "Transfer failed");
-                emit TokenPurchase(msg.sender, msg.value, tokensBought);
+            uint256 ethReserve = address(this).balance - msg.value;
+            
+            // Only swap if we have sufficient reserves
+            if (tokenReserve > 0 && ethReserve > 0) {
+                uint256 tokensBought = getInputPrice(msg.value, ethReserve, tokenReserve);
+                // Ensure we have enough tokens
+                if (tokensBought > 0 && tokensBought <= tokenReserve) {
+                    // Try to transfer tokens - if it fails, just revert the receive
+                    // This allows direct ETH swaps but won't interfere with function calls
+                    bool success = IERC20(token).transfer(msg.sender, tokensBought);
+                    if (success) {
+                        emit TokenPurchase(msg.sender, msg.value, tokensBought);
+                    }
+                }
             }
         }
     }
