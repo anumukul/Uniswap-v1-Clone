@@ -81,10 +81,10 @@ export default function LiquidityInterface() {
   }, [decimals])
 
   useEffect(() => {
-    if (action === 'add' && ethAmount && exchangeEthBalance && exchangeTokenBalance && totalSupply && totalSupply > 0n) {
+    if (action === 'add' && ethAmount && exchangeEthBalance && exchangeTokenBalance && totalSupply && totalSupply > BigInt(0)) {
       const ethReserve = exchangeEthBalance.value
       const tokenReserve = exchangeTokenBalance
-      if (ethReserve > 0n) {
+      if (ethReserve > BigInt(0)) {
         const calculatedTokenAmount = (parseEther(ethAmount) * tokenReserve) / ethReserve
         setTokenAmount(formatUnits(calculatedTokenAmount, tokenDecimals))
       }

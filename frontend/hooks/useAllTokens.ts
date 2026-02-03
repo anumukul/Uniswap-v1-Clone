@@ -18,7 +18,7 @@ export function useAllTokens() {
   })
 
   const tokenIds = useMemo(() => {
-    if (!tokenCount || tokenCount === 0n) return []
+    if (!tokenCount || tokenCount === BigInt(0)) return []
     const count = Number(tokenCount)
     return Array.from({ length: Math.min(count, 50) }, (_, i) => i + 1)
   }, [tokenCount])
