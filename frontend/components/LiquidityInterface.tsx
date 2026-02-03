@@ -40,7 +40,7 @@ export default function LiquidityInterface() {
     address: tokenAddress as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
-    args: address ? [address] : undefined,
+    args: address ? [address as `0x${string}`] : undefined,
     query: { enabled: !!tokenAddress && !!address && tokenAddress.startsWith('0x') },
   })
 
@@ -48,7 +48,7 @@ export default function LiquidityInterface() {
     address: exchangeAddress as `0x${string}`,
     abi: EXCHANGE_ABI,
     functionName: 'balanceOf',
-    args: address ? [address] : undefined,
+    args: address ? [address as `0x${string}`] : undefined,
     query: { enabled: !!exchangeAddress && !!address },
   })
 
@@ -57,7 +57,7 @@ export default function LiquidityInterface() {
     address: tokenAddress as `0x${string}`,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
-    args: exchangeAddress ? [exchangeAddress] : undefined,
+    args: exchangeAddress ? [exchangeAddress as `0x${string}`] : undefined,
     query: { enabled: !!tokenAddress && !!exchangeAddress && tokenAddress.startsWith('0x') },
   })
 

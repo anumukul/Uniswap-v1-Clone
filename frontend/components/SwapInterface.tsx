@@ -58,7 +58,7 @@ export default function SwapInterface() {
     address: inputToken !== 'ETH' ? (inputToken as `0x${string}`) : undefined,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
-    args: address ? [address] : undefined,
+    args: address ? [address as `0x${string}`] : undefined,
     query: { enabled: inputToken !== 'ETH' && !!address && inputToken.startsWith('0x') },
   })
 
@@ -66,7 +66,7 @@ export default function SwapInterface() {
     address: outputToken !== 'ETH' ? (outputToken as `0x${string}`) : undefined,
     abi: ERC20_ABI,
     functionName: 'balanceOf',
-    args: address ? [address] : undefined,
+    args: address ? [address as `0x${string}`] : undefined,
     query: { enabled: outputToken !== 'ETH' && !!address && outputToken.startsWith('0x') },
   })
 
